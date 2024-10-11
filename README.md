@@ -4,11 +4,13 @@ HTMLSnapshot is a lightweight and efficient API for generating images from HTML 
 
 ## Features
 
-- Convert HTML templates to images (PNG, JPEG, etc.).
-- Supports dynamic data injection into HTML templates.
-- Utilizes Puppeteer for headless Chrome rendering.
-- Customizable Puppeteer options for performance optimization.
-- Rate limiting to prevent excessive requests.
+- HTML to Image Conversion: Generate images (PNG, JPEG, etc.) from HTML templates.
+- Dynamic Data Injection: Seamlessly inject dynamic data into HTML templates.
+- Headless Rendering: Utilizes Puppeteer for rendering HTML using a headless version of Chrome.
+- Customizable Options: Modify Puppeteer settings for optimal performance and image quality.
+- Rate Limiting: Implements rate limiting to prevent excessive requests from a single IP address.
+- Error Handling: Provides structured error responses for better debugging and user experience.
+- CORS Support: Allows cross-origin requests for integration with different client applications.
 
 ## Requirements
 
@@ -254,8 +256,14 @@ This project is licensed under the MIT License. See the [LICENSE](./LICENSE) fil
 
 ## Acknowledgements
 
-- [node-html-to-image](https://www.npmjs.com/package/node-html-to-image)
-- [Puppeteer](https://pptr.dev/)
+- [Puppeteer](https://pptr.dev/) - A powerful library for interacting with browsers and achieving automation.
+- [Express](https://expressjs.com/) - A Node.js framework that simplifies web application development.
+- [dotenv](https://github.com/motdotla/dotenv) - For loading environment variables from a `.env` file.
+- [Helmet](https://helmetjs.github.io/) - To secure Express applications from common vulnerabilities.
+- [express-async-errors](https://github.com/delvedor/express-async-errors) - To catch unhandled errors in async functions.
+- [express-rate-limit](https://github.com/nfriedly/express-rate-limit) - To limit the rate of requests to an API.
+- [CORS](https://github.com/expressjs/cors) - To facilitate access to API resources from different origins.
+
 
 ---
 
