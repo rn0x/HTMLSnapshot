@@ -1,0 +1,262 @@
+### HTMLSnapshot
+
+HTMLSnapshot is a lightweight and efficient API for generating images from HTML templates using Node.js and Puppeteer. It allows you to convert dynamic HTML content into images, such as PNGs or JPEGs, with customizable Puppeteer options.
+
+## Features
+
+- Convert HTML templates to images (PNG, JPEG, etc.).
+- Supports dynamic data injection into HTML templates.
+- Utilizes Puppeteer for headless Chrome rendering.
+- Customizable Puppeteer options for performance optimization.
+- Rate limiting to prevent excessive requests.
+
+## Requirements
+
+- Node.js (version 18 or higher)
+- Docker (optional, but recommended)
+- Google Chrome (if running Puppeteer manually)
+
+## Installation
+
+To get started with HTMLSnapshot, clone the repository and install the dependencies:
+
+```bash
+git clone https://github.com/rn0x/HTMLSnapshot.git
+cd HTMLSnapshot
+npm install
+```
+
+## Environment Variables
+
+Create a `.env` file in the root of the project with the following variables:
+
+```bash
+NODE_ENV=development                             # The environment the server is running in (development or production)
+PORT=3000                                        # Server port
+PUPPETEER_EXECUTABLE_PATH=/usr/bin/google-chrome # Path to the executable for Chrome
+PUPPETEER_HEADLESS=true                          # Can be set to true or false
+PUPPETEER_TIMEOUT=10000                          # Timeout in milliseconds
+IMAGE_QUALITY=100                                # Image quality (0 to 100)
+IMAGE_TYPE=jpeg                                  # Image type (jpeg or png)
+RATE_LIMIT_WINDOW_MS=3600000                     # 1 hour
+RATE_LIMIT_MAX=500                               # Maximum requests per IP
+BODY_SIZE_LIMIT=10mb                             # Maximum body size
+```
+
+## Usage
+
+Once you've installed the dependencies, you can start the application:
+
+```bash
+npm start
+```
+
+The API will be available at `http://localhost:3000`.
+
+### API Endpoint
+
+#### POST `/generate-image`
+
+Generate an image from an HTML template.
+
+- **URL**: `/generate-image`
+- **Method**: `POST`
+- **Body**:
+  ```json
+  {
+    "htmlTemplate": "<html><body>{{message}}</body></html>",
+    "data": {
+      "message": "Hello, World!"
+    }
+  }
+  ```
+
+- **Response**:
+
+```json
+{
+  "success": true,
+  "message": "Image generated successfully",
+  "image": "<base64-encoded-image>"
+}
+```
+
+### Examples
+
+#### Using `curl`
+
+You can send a POST request using `curl` as follows:
+
+```bash
+curl -X POST http://localhost:3000/generate-image \
+-H "Content-Type: application/json" \
+-d '{
+  "htmlTemplate": "<html><body>{{message}}</body></html>",
+  "data": {
+    "message": "Hello, World!"
+  }
+}'
+```
+
+#### Using `fetch`
+
+You can also use the `fetch` API in JavaScript to make the request:
+
+```javascript
+fetch('http://localhost:3000/generate-image', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    htmlTemplate: '<html><body>{{message}}</body></html>',
+    data: {
+      message: 'Hello, World!'
+    }
+  })
+})
+.then(response => response.json())
+.then(data => {
+  console.log('Success:', data);
+})
+.catch((error) => {
+  console.error('Error:', error);
+});
+```
+
+#### using `Telegraf.js`
+
+```javascript
+const Telegraf = require('telegraf');
+const fetch = require('node-fetch');
+const { Buffer } = require('buffer');
+
+const bot = new Telegraf('YOUR_TELEGRAM_BOT_TOKEN');
+
+bot.start((ctx) => ctx.reply('Hi! Send me anything to create an image of.'));
+
+bot.on('text', async (ctx) => {
+    const htmlTemplate = `<html><body>{{message}}</body></html>`;
+    const data = { message: ctx.message.text };
+
+    const response = await fetch('http://localhost:3000/generate-image', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ htmlTemplate, data }),
+    });
+
+    const result = await response.json();
+
+    if (result.success) {
+        const imageBuffer = Buffer.from(result.image, 'base64');
+        ctx.replyWithPhoto({ source: imageBuffer });
+    } else {
+        ctx.reply('An error occurred while creating the image.');
+    }
+});
+
+bot.launch();
+```
+
+#### using `HTML`
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Convert HTML to Image</title>
+</head>
+<body>
+    <h1>Create an Image from HTML</h1>
+    <button id="generate-image">Generate Image</button>
+    <script>
+        document.getElementById('generate-image').addEventListener('click', async () => {
+            const htmlTemplate = '<html><body><h1>{{message}}</h1></body></html>';
+            const data = { message: 'Hello, World!' };
+
+            const response = await fetch('http://localhost:3000/generate-image', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ htmlTemplate, data }),
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                const img = document.createElement('img');
+                img.src = 'data:image/png;base64,' + result.image;
+                document.body.appendChild(img);
+            } else {
+                alert('An error occurred while generating the image.');
+            }
+        });
+    </script>
+</body>
+</html>
+```
+
+## Docker Setup
+
+You can easily run HTMLSnapshot in a Docker container. The provided `Dockerfile` ensures that Puppeteer and Google Chrome are properly installed for headless rendering.
+
+### Build Docker Image
+
+```bash
+docker build -t htmlsnapshot .
+```
+
+### Run Docker Container
+
+```bash
+docker run -p 3000:3000 htmlsnapshot
+```
+
+Or use Docker Compose:
+
+```bash
+docker-compose up
+```
+
+## Rate Limiting
+
+HTMLSnapshot uses a basic rate-limiting strategy to prevent abuse. The default rate limit is 500 requests per hour per IP address. You can adjust this limit in the source code as needed.
+
+## Error Handling
+
+The API provides consistent error responses in JSON format. Here's an example of an error response:
+
+```json
+{
+  "success": false,
+  "message": "htmlTemplate is required"
+}
+```
+
+## Development
+
+If you'd like to contribute to the project or run it in development mode:
+
+1. Clone the repository.
+2. Install dependencies:
+    ```bash
+    npm install
+    ```
+3. Start the development server:
+    ```bash
+    npm run dev
+    ```
+
+## License
+
+This project is licensed under the MIT License. See the [LICENSE](./LICENSE) file for more details.
+
+## Acknowledgements
+
+- [node-html-to-image](https://www.npmjs.com/package/node-html-to-image)
+- [Puppeteer](https://pptr.dev/)
+
+---
+
+Made with ❤️ by [rn0x](https://github.com/rn0x)

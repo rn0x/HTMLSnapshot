@@ -1,0 +1,40 @@
+{
+  "name": "htmlsnapshot",
+  "version": "1.0.0",
+  "description": "A lightweight API for generating images from HTML templates using Puppeteer and Node.js.",
+  "main": "index.mjs",
+  "scripts": {
+    "start": "node index.mjs",
+    "dev": "nodemon index.mjs",
+    "test": "node test.mjs"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/rn0x/HTMLSnapshot.git"
+  },
+  "keywords": [
+    "html",
+    "image-generation",
+    "puppeteer",
+    "nodejs",
+    "express"
+  ],
+  "author": "Rayan Almalki (rn0x)",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/rn0x/HTMLSnapshot/issues"
+  },
+  "homepage": "https://github.com/rn0x/HTMLSnapshot#readme",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.21.1",
+    "express-async-errors": "^3.1.1",
+    "express-rate-limit": "^7.4.1",
+    "helmet": "^8.0.0",
+    "puppeteer-core": "^23.5.3"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.7"
+  }
+}
