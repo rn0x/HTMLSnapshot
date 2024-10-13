@@ -146,57 +146,62 @@ async function closeBrowser() {
 }
 
 // وظيفة توليد الصورة من HTML باستخدام puppeteer-core
-async function generateImageFromHtml({ htmlTemplate, data = {} }) {
+async function generateImageFromHtml({ htmlTemplate, data = {}, retryCount = 3 }) {
     let page;
-    try {
-        await initBrowser(); // تأكد من أن المتصفح مفتوح
+    for (let attempt = 0; attempt < retryCount; attempt++) {
+        try {
+            await initBrowser(); // تأكد من أن المتصفح مفتوح
 
-        // فتح صفحة جديدة
-        page = await browser.newPage();
+            // فتح صفحة جديدة
+            page = await browser.newPage();
 
-        // تعطيل الكاش للحصول على الأداء الأمثل
-        await page.setCacheEnabled(false);
+            // تعطيل الكاش للحصول على الأداء الأمثل
+            await page.setCacheEnabled(false);
 
-        // تفعيل اعتراض الطلبات
-        await page.setRequestInterception(true);
+            // تفعيل اعتراض الطلبات
+            await page.setRequestInterception(true);
 
-        // التعامل مع الطلبات لاعتراض وإلغاء إعادة التوجيه
-        page.on('request', (request) => {
-            // إذا كان الطلب هو إعادة توجيه، ألغِ الطلب
-            if (['redirect'].includes(request.redirectChain().length)) {
-                request.abort();
-            } else {
-                request.continue(); // السماح للطلبات العادية بالمرور
+            // التعامل مع الطلبات لاعتراض وإلغاء إعادة التوجيه
+            page.on('request', (request) => {
+                if (['redirect'].includes(request.redirectChain().length)) {
+                    request.abort();
+                } else {
+                    request.continue();
+                }
+            });
+
+            // دمج البيانات في القالب
+            const html = Object.keys(data).reduce(
+                (acc, key) => acc.replace(new RegExp(`{{${key}}}`, 'g'), data[key]),
+                htmlTemplate
+            );
+
+            // ضبط محتوى الصفحة
+            await page.setContent(html, { waitUntil: 'networkidle0' });
+            await new Promise(r => setTimeout(r, 2000)); // تأخير لإعطاء الوقت لتحميل المحتوى
+
+            // توليد الصورة
+            const screenshotOptions = {
+                type: process.env.IMAGE_TYPE === "png" ? 'png' : "jpeg",
+                quality: process.env.IMAGE_QUALITY ? parseInt(process.env.IMAGE_QUALITY, 10) : 100,
+                encoding: 'base64',
+                fullPage: true
+            };
+
+            const base64Data = await page.screenshot(screenshotOptions);
+            return base64Data;
+
+        } catch (error) {
+            logError(`Attempt ${attempt + 1} failed:`, error);
+            if (attempt === retryCount - 1) {
+                throw new Error('Error generating image: ' + error.message);
             }
-        });
-
-        // دمج البيانات في القالب
-        const html = Object.keys(data).reduce(
-            (acc, key) => acc.replace(new RegExp(`{{${key}}}`, 'g'), data[key]),
-            htmlTemplate
-        );
-
-        // ضبط محتوى الصفحة
-        await page.setContent(html, { waitUntil: 'networkidle0' });
-        await new Promise(r => setTimeout(r, 2000));
-
-
-        // توليد الصورة
-        const screenshotOptions = {
-            type: process.env.IMAGE_TYPE === "png" ? 'png' : "jpeg",
-            quality: process.env.IMAGE_QUALITY ? parseInt(process.env.IMAGE_QUALITY, 10) : 100,
-            encoding: 'base64',
-            fullPage: true
-        };
-
-        const base64Data = await page.screenshot(screenshotOptions);
-        return base64Data;
-
-    } catch (error) {
-        throw new Error('Error generating image: ' + error.message);
-    } finally {
-        if (page) {
-            await page.close(); // تأكد من إغلاق الصفحة بعد الاستخدام
+            await closeBrowser(); // تأكد من إغلاق المتصفح في حالة الفشل
+            await new Promise(r => setTimeout(r, 2000)); // انتظر قبل المحاولة مرة أخرى
+        } finally {
+            if (page) {
+                await page.close(); // تأكد من إغلاق الصفحة بعد الاستخدام
+            }
         }
     }
 }
