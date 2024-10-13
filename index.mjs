@@ -105,22 +105,29 @@ let browser;
 
 // دالة لتهيئة المتصفح مرة واحدة فقط
 async function initBrowser() {
-    if (!browser) {
-        browser = await puppeteer.launch({
-            args: [
-                '--no-sandbox',
-                '--disable-setuid-sandbox',
-                '--disable-dev-shm-usage',
-                '--disable-cache',
-                '--disable-accelerated-2d-canvas',
-                '--disable-gpu',
-                '--disable-extensions',
-            ],
-            executablePath: process.env.PUPPETEER_EXECUTABLE_PATH,
-            headless: process.env.PUPPETEER_HEADLESS === 'false' ? false : "new",
-            // تعطيل JavaScript داخل الصفحة لزيادة الأمان
-            ignoreDefaultArgs: ['--enable-automation'],
-        });
+    try {
+        // تحقق مما إذا كان المتصفح شغالًا
+        if (!browser || !(await browser.isConnected())) {
+            // إذا لم يكن متصلًا، قم بتهيئة المتصفح من جديد
+            browser = await puppeteer.launch({
+                args: [
+                    '--no-sandbox',
+                    '--disable-setuid-sandbox',
+                    '--disable-dev-shm-usage',
+                    '--disable-cache',
+                    '--disable-accelerated-2d-canvas',
+                    '--disable-gpu',
+                    '--disable-extensions',
+                ],
+                executablePath: process.env.PUPPETEER_EXECUTABLE_PATH,
+                headless: process.env.PUPPETEER_HEADLESS === 'false' ? false : "new",
+                ignoreDefaultArgs: ['--enable-automation'],
+            });
+            logInfo("Browser initialized successfully.");
+        }
+    } catch (error) {
+        logError("Error initializing the browser:", error);
+        throw new Error('Failed to initialize the browser: ' + error.message);
     }
 }
 
@@ -132,6 +139,8 @@ async function closeBrowser() {
             logInfo("Browser closed successfully.");
         } catch (error) {
             logError("Error closing the browser:", error);
+        } finally {
+            browser = null; // إعادة تعيين المتصفح إلى null بعد الإغلاق
         }
     }
 }
