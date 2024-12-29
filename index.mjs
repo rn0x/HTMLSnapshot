@@ -175,6 +175,13 @@ async function generateImageFromHtml({ htmlTemplate, data = {}, retryCount = 3 }
                 (acc, key) => acc.replace(new RegExp(`{{${key}}}`, 'g'), data[key]),
                 htmlTemplate
             );
+            
+            // Set Viewport for better output image
+            await page.setViewport({
+                width: 1920,
+                height: 1080,
+                deviceScaleFactor: 2  // This makes it 2x sharper
+            });
 
             // ضبط محتوى الصفحة
             await page.setContent(html, { waitUntil: 'networkidle0' });
@@ -183,10 +190,14 @@ async function generateImageFromHtml({ htmlTemplate, data = {}, retryCount = 3 }
             // توليد الصورة
             const screenshotOptions = {
                 type: process.env.IMAGE_TYPE === "png" ? 'png' : "jpeg",
-                quality: process.env.IMAGE_QUALITY ? parseInt(process.env.IMAGE_QUALITY, 10) : 100,
                 encoding: 'base64',
                 fullPage: true
             };
+
+            // Add quality only for JPEG
+            if (process.env.IMAGE_TYPE !== "png" && process.env.IMAGE_QUALITY) {
+            screenshotOptions.quality = parseInt(process.env.IMAGE_QUALITY, 10);
+            }
 
             const base64Data = await page.screenshot(screenshotOptions);
             return base64Data;
